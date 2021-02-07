@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fragment_permission"
+    >
+    <fragment
+        android:id="@+id/fragment_permission"
+        android:name="hyunh.sample.barcode.view.PermissionFragment"
+        >
+        <action
+            android:id="@+id/action_permission_to_main"
+            app:destination="@id/fragment_main"
+            app:popUpTo="@id/fragment_permission"
+            app:popUpToInclusive="true"
+            />
+    </fragment>
+    <fragment
+        android:id="@+id/fragment_main"
+        android:name="hyunh.sample.barcode.view.MainFragment"
+        >
+        <action
+            android:id="@+id/action_main_to_permission"
+            app:destination="@id/fragment_permission"
+            app:popUpTo="@id/fragment_main"
+            app:popUpToInclusive="true"
+            />
+    </fragment>
+</navigation>
