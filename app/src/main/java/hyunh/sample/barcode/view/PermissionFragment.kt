@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import hyunh.sample.barcode.R
 
-fun hasPermission(context: Context, permission: String) : Boolean {
+fun hasPermission(context: Context, permission: String): Boolean {
     return ContextCompat.checkSelfPermission(context, permission) ==
             PackageManager.PERMISSION_GRANTED
 }
@@ -25,9 +25,9 @@ class PermissionFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         if (hasPermission(requireContext(), Manifest.permission.CAMERA)) {
             actionToMain()

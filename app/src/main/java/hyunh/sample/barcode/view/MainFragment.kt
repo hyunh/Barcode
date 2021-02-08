@@ -4,10 +4,15 @@ import android.Manifest
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -18,8 +23,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import hyunh.sample.barcode.R
 import hyunh.sample.barcode.databinding.FragmentMainBinding
+import hyunh.sample.barcode.logd
 import hyunh.sample.barcode.loge
-import hyunh.sample.barcode.logi
 import hyunh.sample.barcode.viewmodel.MainViewModel
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -40,24 +45,54 @@ class MainFragment : Fragment() {
         Executors.newSingleThreadExecutor()
     }
 
+    private val analyzer: (ImageProxy) -> Unit = { imageProxy ->
+        // TODO: Validate image
+    }
+
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ) = DataBindingUtil.inflate<FragmentMainBinding>(
-        inflater, R.layout.fragment_main, container, false
-    ).apply {
-        lifecycleOwner = viewLifecycleOwner
-        preview.post {
-            setupCamera(preview)
+    ): View {
+        val binding = DataBindingUtil.inflate<FragmentMainBinding>(
+            inflater, R.layout.fragment_main, container, false).apply {
+            lifecycleOwner = viewLifecycleOwner
+            vm = model
+            preview.post {
+                setupCamera(preview)
+            }
         }
-    }.root
+
+        setHasOptionsMenu(true)
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.title = getString(R.string.app_name)
+
+        return binding.root
+    }
 
     override fun onResume() {
         super.onResume()
         if (!hasPermission(requireContext(), Manifest.permission.CAMERA)) {
             Navigation.findNavController(requireActivity(), R.id.nav_host)
                     .navigate(MainFragmentDirections.actionMainToPermission())
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_main, menu)
+        model.showRefresh.observe(viewLifecycleOwner) {
+            menu.findItem(R.id.menu_refresh).isVisible = it
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_refresh -> {
+                return true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
+            }
         }
     }
 
@@ -80,6 +115,7 @@ class MainFragment : Fragment() {
         }
 
         val ratio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+        logd(TAG, "bindUseCase() width: ${metrics.widthPixels}, height: ${metrics.heightPixels}")
 
         val facing = when {
             cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) -> CameraSelector.LENS_FACING_BACK
@@ -99,10 +135,7 @@ class MainFragment : Fragment() {
                 .setTargetRotation(view.display.rotation)
                 .build()
                 .apply {
-                    setAnalyzer(executor) {
-                        logi(TAG, "bindUseCase() $it")
-
-                    }
+                    setAnalyzer(executor, analyzer)
                 }
 
         cameraProvider.unbindAll()
