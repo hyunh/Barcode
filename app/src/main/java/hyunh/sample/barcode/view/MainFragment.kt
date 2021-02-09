@@ -26,6 +26,7 @@ import hyunh.sample.barcode.databinding.FragmentMainBinding
 import hyunh.sample.barcode.logd
 import hyunh.sample.barcode.loge
 import hyunh.sample.barcode.viewmodel.MainViewModel
+import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
@@ -46,7 +47,16 @@ class MainFragment : Fragment() {
     }
 
     private val analyzer: (ImageProxy) -> Unit = { imageProxy ->
-        // TODO: Validate image
+        fun ByteBuffer.toByteArray(): ByteArray {
+            rewind()
+            return ByteArray(remaining()).also {
+                get(it)
+            }
+        }
+        imageProxy.use {
+            logd(TAG, "analyze() width: ${it.width}, height: ${it.height}")
+            model.validate(it.planes[0].buffer.toByteArray(), it.width, it.height)
+        }
     }
 
     override fun onCreateView(
@@ -88,7 +98,8 @@ class MainFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_refresh -> {
-                return true
+                model.resetResult()
+                true
             }
             else -> {
                 super.onOptionsItemSelected(item)
